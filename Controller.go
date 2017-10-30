@@ -5,7 +5,6 @@ package api
 
 import (
 	"encoding/json"
-	"log"
 	"net/http"
 
 	log "github.com/Sirupsen/logrus"
