@@ -11,7 +11,7 @@ import (
 	"net/http"
 	"time"
 
-	"github.com/mkenney/go/api"
+	api "github.com/mkenney/go-rest-lite"
 )
 
 func main() {

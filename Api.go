@@ -5,24 +5,24 @@ package api
 
 import (
 	"errors"
-	"fmt"
-	"log"
 	"net/http"
+
+	"github.com/golang/glog"
 )
 
 /*
-Api holds the controllers for each route and the http Handler, if any
+API holds the controllers for each route and the http Handler, if any
 */
-type Api struct {
+type API struct {
 	Controllers map[string]*Controller
 	Handler     http.Handler
 }
 
 /*
-NewServer returns a new Api instance
+NewServer returns a new API instance
 */
-func NewServer() *Api {
-	api := new(Api)
+func NewServer() *API {
+	api := new(API)
 	api.Controllers = make(map[string]*Controller)
 	return api
 }
@@ -30,7 +30,7 @@ func NewServer() *Api {
 /*
 AddHandler adds a handler to the stack
 */
-func (api *Api) AddHandler(endpoint string, handler func(*http.Request, *Response)) *Api {
+func (api *API) AddHandler(endpoint string, handler func(*http.Request, *Response)) *API {
 	ctrl, ok := api.Controllers[endpoint]
 	if !ok {
 		ctrl = NewController(endpoint)
@@ -43,7 +43,7 @@ func (api *Api) AddHandler(endpoint string, handler func(*http.Request, *Respons
 /*
 GetController retrieves a controller from the stack
 */
-func (api *Api) GetController(endpoint string) (*Controller, error) {
+func (api *API) GetController(endpoint string) (*Controller, error) {
 	controller, ok := api.Controllers[endpoint]
 	if ok {
 		return controller, nil
@@ -54,16 +54,16 @@ func (api *Api) GetController(endpoint string) (*Controller, error) {
 /*
 ListenAndServe serves all the stuff
 */
-func (api *Api) ListenAndServe(port string) {
+func (api *API) ListenAndServe(port string) {
 	mux := http.NewServeMux()
 
-	fmt.Printf("generating handlers... ")
+	glog.Infof("Generating handlers... ")
 	for _, controller := range api.Controllers {
 		mux.HandleFunc(controller.Endpoint, controller.HandlerFunc())
 	}
-	fmt.Println("done.")
+	glog.Infof("Done")
 
-	fmt.Printf("starting server on port %s\n", port)
+	glog.Infof("Starting server on port %s\n", port)
 	server := http.Server{Addr: port, Handler: mux}
-	log.Fatal(server.ListenAndServe())
+	go glog.Fatalf("%v", server.ListenAndServe())
 }
