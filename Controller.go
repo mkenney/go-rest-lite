@@ -5,9 +5,10 @@ package api
 
 import (
 	"encoding/json"
-	"fmt"
 	"log"
 	"net/http"
+
+	log "github.com/Sirupsen/logrus"
 )
 
 /*
@@ -46,14 +47,14 @@ stack concurrently and write the results to the http response
 */
 func (ctrl *Controller) HandlerFunc() func(http.ResponseWriter, *http.Request) {
 	return func(writer http.ResponseWriter, request *http.Request) {
-		log.Print(fmt.Sprintf("Processing request %s:%s\n", request.Method, request.RequestURI))
+		log.Infof("Processing request %s:%s", request.Method, request.RequestURI)
 
 		// Fan-out all the routines
 		response := NewResponse()
 		for _, handler := range ctrl.Handlers {
 			go handler(request, response)
 		}
-		log.Print(fmt.Sprintf("Started %v routine(s)\n", len(ctrl.Handlers)))
+		log.Infof("Started %v routine(s)", len(ctrl.Handlers))
 
 		// Fan-in all the responses
 		var responses []interface{}
@@ -69,7 +70,7 @@ func (ctrl *Controller) HandlerFunc() func(http.ResponseWriter, *http.Request) {
 				responses = append(responses, resp)
 			}
 		}
-		log.Print(fmt.Sprintf("Collected %v response(s)\n", len(responses)))
+		log.Infof("Collected %v response(s)", len(responses))
 
 		// Convert responses to JSON and return
 		response.Body = responses
@@ -78,7 +79,7 @@ func (ctrl *Controller) HandlerFunc() func(http.ResponseWriter, *http.Request) {
 		if err == nil {
 			writer.Header().Set("Content-Type", "application/json")
 			writer.Write(output)
-			log.Print(fmt.Sprintf("Output returned to client\n"))
+			log.Infof("Output returned to client")
 		}
 	}
 }
@@ -88,7 +89,7 @@ func errorHandler(fn func(http.ResponseWriter, *http.Request) error) http.Handle
 		err := fn(writer, request)
 		if err != nil {
 			http.Error(writer, err.Error(), http.StatusInternalServerError)
-			log.Printf("handling %q: %v", request.RequestURI, err)
+			log.Infof("handling %q: %v", request.RequestURI, err)
 		}
 	}
 }

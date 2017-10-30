@@ -63,7 +63,7 @@ func (api *API) ListenAndServe(port string) {
 	}
 	log.Infof("Done")
 
-	log.Infof("Starting server on port %s\n", port)
+	log.Infof("Starting server on port %s", port)
 	server := http.Server{Addr: port, Handler: mux}
 	go log.Fatalf("%v", server.ListenAndServe())
 }
