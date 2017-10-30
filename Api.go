@@ -7,7 +7,7 @@ import (
 	"errors"
 	"net/http"
 
-	"github.com/golang/glog"
+	log "github.com/Sirupsen/logrus"
 )
 
 /*
@@ -57,13 +57,13 @@ ListenAndServe serves all the stuff
 func (api *API) ListenAndServe(port string) {
 	mux := http.NewServeMux()
 
-	glog.Infof("Generating handlers... ")
+	log.Infof("Generating handlers... ")
 	for _, controller := range api.Controllers {
 		mux.HandleFunc(controller.Endpoint, controller.HandlerFunc())
 	}
-	glog.Infof("Done")
+	log.Infof("Done")
 
-	glog.Infof("Starting server on port %s\n", port)
+	log.Infof("Starting server on port %s\n", port)
 	server := http.Server{Addr: port, Handler: mux}
-	go glog.Fatalf("%v", server.ListenAndServe())
+	go log.Fatalf("%v", server.ListenAndServe())
 }
