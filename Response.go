@@ -7,40 +7,20 @@ package api
 Response stores handlers for each endpoint
 */
 type Response struct {
-	/*
-		Store the response body
-	*/
-	Body interface{}
-
-	/*
-		Goroutine communication channel
-	*/
-	Channel chan interface{}
-
-	/*
-		Any error messages about the request
-	*/
-	Errors []error
-
-	/*
-		Any headers to send with the request
-	*/
-	Headers map[string][]string
-
-	/*
-		The request status code
-	*/
-	statusCode int
-
-	/*
-		The request status message
-	*/
-	statusMessage string
-
-	/*
-		Generate a goroutine complete signal
-	*/
-	Done func() handlerComplete
+	// Store the response body
+	Body []interface{} `json:"body"`
+	// Goroutine communication channel
+	Channel chan interface{} `json:"-"`
+	// Any error messages about the request
+	Errors []error `json:"errors"`
+	// Any headers to send with the request
+	Headers map[string][]string `json:"-"`
+	// The request status code
+	StatusCode int `json:"status_code"`
+	// The request status message
+	StatusMessage string `json:"status_message"`
+	// Generate a goroutine complete signal
+	Done func() handlerComplete `json:"-"`
 }
 
 /*
@@ -59,7 +39,9 @@ func NewResponse() *Response {
 		return handlerComplete{}
 	}
 	response.Headers = make(map[string][]string)
-	response.SetStatusCode(200)
+	response.StatusCode = 200
+	response.StatusMessage = ""
+	response.Body = make([]interface{}, 0)
 	return response
 }
 
@@ -75,57 +57,7 @@ func (r *Response) AddHeader(header, value string) *Response {
 	return r
 }
 
-/*
-StatusCode returns the current request status code
-*/
-func (r *Response) StatusCode() int {
-	return r.statusCode
-}
-
-/*
-StatusMessage returns the current request status message
-*/
-func (r *Response) StatusMessage() string {
-	return r.statusMessage
-}
-
-/*
-SetStatus sets the request status code and message
-*/
-func (r *Response) SetStatus(code int, message string) *Response {
-	r.SetStatusCode(code)
-	r.SetStatusMessage(message)
-	return r
-}
-
-/*
-SetStatusCode sets the request status code
-*/
-func (r *Response) SetStatusCode(code int) *Response {
-	r.statusCode = code
-
-	msg, err := r.getDefaultStatusMessage(r.statusCode)
-	if nil != err {
-		r.statusMessage = ""
-	} else {
-		r.statusMessage = msg
-	}
-	return r
-}
-
-/*
-SetStatusMessage sets the request status message
-*/
-func (r *Response) SetStatusMessage(message string) *Response {
-	msg, err := r.getDefaultStatusMessage(r.statusCode)
-	if nil == err {
-		message = msg + " - " + message
-	}
-	r.statusMessage = message
-	return r
-}
-
-func (r *Response) getDefaultStatusMessage(statusCode int) (message string, e error) {
+func (r *Response) GetDefaultStatusMessage(statusCode int) (message string, e error) {
 	message, ok := statusCodes[statusCode]
 	if ok {
 		return message, nil

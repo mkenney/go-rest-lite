@@ -59,8 +59,8 @@ func (ctrl *Controller) HandlerFunc() func(http.ResponseWriter, *http.Request) {
 		var responses []interface{}
 		var a int
 		for resp := range response.Channel {
-			_, ok := resp.(handlerComplete)
-			if ok {
+
+			if _, ok := resp.(handlerComplete); ok {
 				a++
 				if a >= len(ctrl.Handlers) {
 					break
@@ -73,12 +73,16 @@ func (ctrl *Controller) HandlerFunc() func(http.ResponseWriter, *http.Request) {
 
 		// Convert responses to JSON and return
 		response.Body = responses
-		output, err := json.Marshal(response.Body)
+		output, err := json.Marshal(response)
 
 		if err == nil {
+			writer.WriteHeader(response.StatusCode)
+			writer.Header().Set("StatusMessage", response.StatusMessage)
 			writer.Header().Set("Content-Type", "application/json")
 			writer.Write(output)
 			log.Infof("Output returned to client")
+		} else {
+			log.Error(err)
 		}
 	}
 }
