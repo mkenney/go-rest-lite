@@ -53,7 +53,7 @@ func (api *API) GetController(endpoint string) (*Controller, error) {
 }
 
 /*
-ListenAndServe serves all the stuff
+ListenAndServe starts the HTTP server process
 */
 func (api *API) ListenAndServe(port int) {
 	mux := http.NewServeMux()
@@ -64,9 +64,9 @@ func (api *API) ListenAndServe(port int) {
 	}
 	log.Infof("Done")
 
-	log.Infof("Starting http server 0.0.0.0:%d", port)
+	log.Infof("Starting HTTP service on port %d", port)
 	server := http.Server{
-		Addr:    fmt.Sprintf("0.0.0.0:%d", port),
+		Addr:    fmt.Sprintf(":%d", port),
 		Handler: mux,
 	}
 	go log.Fatalf("%v", server.ListenAndServe())
