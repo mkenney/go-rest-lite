@@ -3,24 +3,36 @@ Package api is a Golang API service
 */
 package api
 
+import "fmt"
+
 /*
 Response stores handlers for each endpoint
 */
 type Response struct {
-	// Store the response body
-	Body []interface{} `json:"body"`
 	// Goroutine communication channel
 	Channel chan interface{} `json:"-"`
+	// Store the response body
+	Content []interface{} `json:"body"`
+	// Generate a goroutine complete signal
+	Done func() handlerComplete `json:"-"`
 	// Any error messages about the request
-	Errors []error `json:"errors"`
+	Errors []Error `json:"errors"`
 	// Any headers to send with the request
 	Headers map[string][]string `json:"-"`
+	// Store the response body
+	HTMLBody string `json:"-"`
 	// The request status code
 	StatusCode int `json:"status_code"`
 	// The request status message
 	StatusMessage string `json:"status_message"`
-	// Generate a goroutine complete signal
-	Done func() handlerComplete `json:"-"`
+}
+
+/*
+Error stores error information
+*/
+type Error struct {
+	Code    int    `json:"code"`
+	Message string `json:"message"`
 }
 
 /*
@@ -40,9 +52,22 @@ func NewResponse() *Response {
 	}
 	response.Headers = make(map[string][]string)
 	response.StatusCode = 200
-	response.StatusMessage = ""
-	response.Body = make([]interface{}, 0)
+	response.StatusMessage = "OK"
+	response.Content = make([]interface{}, 0)
 	return response
+}
+
+/*
+AddError stores a header key/value pair for output with the request
+*/
+func (r *Response) AddError(err error, code int) *Response {
+	r.Errors = append(r.Errors, Error{
+		Code:    code,
+		Message: fmt.Sprint(err),
+	})
+	r.StatusCode = code
+	r.StatusMessage = fmt.Sprint(err)
+	return r
 }
 
 /*
@@ -61,7 +86,6 @@ func (r *Response) GetDefaultStatusMessage(statusCode int) (message string, e er
 	message, ok := statusCodes[statusCode]
 	if ok {
 		return message, nil
-		//return errors.New("emit macho dwarf: elf header corrupted")
 	}
 	return "", e
 }

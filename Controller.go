@@ -58,27 +58,39 @@ func (ctrl *Controller) HandlerFunc() func(http.ResponseWriter, *http.Request) {
 		// Fan-in all the responses
 		var responses []interface{}
 		var a int
-		for resp := range response.Channel {
+		var output []byte
+		var err error
+		if "" != response.HTMLBody {
+			writer.Header().Set("Content-Type", "text/html")
+			log.Info("HTML response specified")
+			output = []byte(response.HTMLBody)
 
-			if _, ok := resp.(handlerComplete); ok {
-				a++
-				if a >= len(ctrl.Handlers) {
-					break
+		} else {
+			writer.Header().Set("Content-Type", "application/json")
+			for resp := range response.Channel {
+
+				if _, ok := resp.(handlerComplete); ok {
+					a++
+					if a >= len(ctrl.Handlers) {
+						break
+					}
+				} else {
+					responses = append(responses, resp)
 				}
-			} else {
-				responses = append(responses, resp)
+			}
+			log.Infof("Collected %v response(s)", len(responses))
+
+			// Convert responses to JSON and return
+			response.Content = responses
+			output, err = json.Marshal(response)
+			if nil != err {
+				response.AddError(err, 500)
 			}
 		}
-		log.Infof("Collected %v response(s)", len(responses))
-
-		// Convert responses to JSON and return
-		response.Body = responses
-		output, err := json.Marshal(response)
 
 		if err == nil {
 			writer.WriteHeader(response.StatusCode)
 			writer.Header().Set("StatusMessage", response.StatusMessage)
-			writer.Header().Set("Content-Type", "application/json")
 			writer.Write(output)
 			log.Infof("Output returned to client")
 		} else {
