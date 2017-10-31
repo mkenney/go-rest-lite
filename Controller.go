@@ -60,14 +60,16 @@ func (ctrl *Controller) HandlerFunc() func(http.ResponseWriter, *http.Request) {
 		var a int
 		var output []byte
 		var err error
-		if "" != response.HTMLBody {
-			writer.Header().Set("Content-Type", "text/html")
-			log.Info("HTML response specified")
-			output = []byte(response.HTMLBody)
 
-		} else {
-			writer.Header().Set("Content-Type", "application/json")
-			for resp := range response.Channel {
+		for resp := range response.Channel {
+			if "" != response.HTMLBody {
+				writer.Header().Set("Content-Type", "text/html")
+				log.Info("HTML response specified")
+				output = []byte(response.HTMLBody)
+				break
+
+			} else {
+				writer.Header().Set("Content-Type", "application/json")
 
 				if _, ok := resp.(handlerComplete); ok {
 					a++
@@ -77,14 +79,14 @@ func (ctrl *Controller) HandlerFunc() func(http.ResponseWriter, *http.Request) {
 				} else {
 					responses = append(responses, resp)
 				}
-			}
-			log.Infof("Collected %v response(s)", len(responses))
+				log.Infof("Collected %v response(s)", len(responses))
 
-			// Convert responses to JSON and return
-			response.Content = responses
-			output, err = json.Marshal(response)
-			if nil != err {
-				response.AddError(err, 500)
+				// Convert responses to JSON and return
+				response.Content = responses
+				output, err = json.Marshal(response)
+				if nil != err {
+					response.AddError(err, 500)
+				}
 			}
 		}
 
