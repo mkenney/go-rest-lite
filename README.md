@@ -1,4 +1,6 @@
-# Go API library experiment
+# Lightweight API library
+
+Generally intended for use in Docker containers
 
 Example
 
