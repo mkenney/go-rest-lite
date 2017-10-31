@@ -5,6 +5,7 @@ package api
 
 import (
 	"errors"
+	"fmt"
 	"net/http"
 
 	log "github.com/Sirupsen/logrus"
@@ -54,16 +55,19 @@ func (api *API) GetController(endpoint string) (*Controller, error) {
 /*
 ListenAndServe serves all the stuff
 */
-func (api *API) ListenAndServe(port string) {
+func (api *API) ListenAndServe(port int) {
 	mux := http.NewServeMux()
 
-	log.Infof("Generating handlers... ")
+	log.Infof("Generating endpoint handlers")
 	for _, controller := range api.Controllers {
 		mux.HandleFunc(controller.Endpoint, controller.HandlerFunc())
 	}
 	log.Infof("Done")
 
-	log.Infof("Starting server on port %s", port)
-	server := http.Server{Addr: port, Handler: mux}
+	log.Infof("Starting http server 0.0.0.0:%d", port)
+	server := http.Server{
+		Addr:    fmt.Sprintf("0.0.0.0:%d", port),
+		Handler: mux,
+	}
 	go log.Fatalf("%v", server.ListenAndServe())
 }
